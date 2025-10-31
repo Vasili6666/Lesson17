@@ -1,7 +1,10 @@
 package tests;
 
+import models.*;
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.Cookie;
+
+import java.util.Collections;
 
 import static com.codeborne.selenide.Condition.text;
 import static com.codeborne.selenide.Condition.visible;
@@ -10,7 +13,7 @@ import static com.codeborne.selenide.WebDriverRunner.getWebDriver;
 import static io.restassured.RestAssured.given;
 import static io.restassured.http.ContentType.JSON;
 
-public class DemoQaCheckTest extends TestBase {  // ← НАСЛЕДУЕМ ОТ TestBase!
+public class DemoQaCheckTest extends TestBase {
 
     @Test
     void checkDemoQaWorkflow() {
@@ -21,25 +24,29 @@ public class DemoQaCheckTest extends TestBase {  // ← НАСЛЕДУЕМ ОТ 
 
         System.out.println("🚀 ЗАПУСК ПОЛНОГО WORKFLOW DEMOQA");
 
-        // ШАГ 1: API ЛОГИН
-        io.restassured.response.Response loginResponse = given()
+        // ШАГ 1: API ЛОГИН (С МОДЕЛЯМИ!)
+        LoginBody loginBody = new LoginBody();
+        loginBody.setUserName(username);
+        loginBody.setPassword(password);
+
+        LoginResponse loginResponse = given()
                 .contentType(JSON)
-                .body("{\"userName\": \"" + username + "\", \"password\": \"" + password + "\"}")
-                .post("/Account/v1/Login")  // ← ОТНОСИТЕЛЬНЫЙ URL!
+                .body(loginBody)  // ← Теперь работает!
+                .post("/Account/v1/Login")
                 .then()
                 .statusCode(200)
                 .extract()
-                .response();
+                .as(LoginResponse.class);
 
-        String token = loginResponse.path("token");
-        String userId = loginResponse.path("userId");
-        String expires = loginResponse.path("expires");
+        String token = loginResponse.getToken();
+        String userId = loginResponse.getUserId();
+        String expires = loginResponse.getExpires();
 
         System.out.println("✅ Токен получен: " + token);
         System.out.println("✅ UserId получен: " + userId);
 
         // ШАГ 2: UI АВТОРИЗАЦИЯ
-        open("/favicon.ico");  // ← ОТНОСИТЕЛЬНЫЙ URL!
+        open("/favicon.ico");
         getWebDriver().manage().addCookie(new Cookie("userID", userId));
         getWebDriver().manage().addCookie(new Cookie("expires", expires));
         getWebDriver().manage().addCookie(new Cookie("token", token));
@@ -50,7 +57,7 @@ public class DemoQaCheckTest extends TestBase {  // ← НАСЛЕДУЕМ ОТ 
                 .contentType(JSON)
                 .header("Authorization", "Bearer " + token)
                 .queryParam("UserId", userId)
-                .delete("/BookStore/v1/Books")  // ← ОТНОСИТЕЛЬНЫЙ URL!
+                .delete("/BookStore/v1/Books")
                 .then()
                 .statusCode(204);
         System.out.println("✅ Все книги удалены из профиля!");
@@ -58,7 +65,7 @@ public class DemoQaCheckTest extends TestBase {  // ← НАСЛЕДУЕМ ОТ 
         // ШАГ 4: ПРОВЕРКА ЧТО КНИГ УДАЛЕНЫ
         io.restassured.response.Response userResponse = given()
                 .header("Authorization", "Bearer " + token)
-                .get("/Account/v1/User/" + userId)  // ← ОТНОСИТЕЛЬНЫЙ URL!
+                .get("/Account/v1/User/" + userId)
                 .then()
                 .statusCode(200)
                 .extract()
@@ -71,12 +78,18 @@ public class DemoQaCheckTest extends TestBase {  // ← НАСЛЕДУЕМ ОТ 
             System.out.println("❌ ОШИБКА: В коллекции осталось " + booksCount + " книг");
         }
 
-        // ШАГ 5: ДОБАВЛЕНИЕ КНИГИ
+        // ШАГ 5: ДОБАВЛЕНИЕ КНИГИ (С МОДЕЛЯМИ!)
+        AddBookBody addBookRequest = new AddBookBody();
+        addBookRequest.setUserId(userId);
+        addBookRequest.setCollectionOfIsbns(
+                Collections.singletonList(new IsbnBook(isbn))  // ← МОДЕЛЬ вместо JSON!
+        );
+
         given()
                 .contentType(JSON)
                 .header("Authorization", "Bearer " + token)
-                .body("{\"userId\": \"" + userId + "\", \"collectionOfIsbns\": [{\"isbn\": \"" + isbn + "\"}]}")
-                .post("/BookStore/v1/Books")  // ← ОТНОСИТЕЛЬНЫЙ URL!
+                .body(addBookRequest)  // ← Передаем модель!
+                .post("/BookStore/v1/Books")
                 .then()
                 .statusCode(201);
         System.out.println("✅ Книга добавлена: " + isbn);
@@ -84,7 +97,7 @@ public class DemoQaCheckTest extends TestBase {  // ← НАСЛЕДУЕМ ОТ 
         // ШАГ 6: ПРОВЕРКА ЧТО КНИГА ДОБАВЛЕНА
         io.restassured.response.Response userResponseAfterAdd = given()
                 .header("Authorization", "Bearer " + token)
-                .get("/Account/v1/User/" + userId)  // ← ОТНОСИТЕЛЬНЫЙ URL!
+                .get("/Account/v1/User/" + userId)
                 .then()
                 .statusCode(200)
                 .extract()
@@ -100,7 +113,7 @@ public class DemoQaCheckTest extends TestBase {  // ← НАСЛЕДУЕМ ОТ 
         }
 
         // ШАГ 7: UI ПРОВЕРКИ
-        open("/profile");  // ← ОТНОСИТЕЛЬНЫЙ URL!
+        open("/profile");
         $("#userName-value").shouldHave(text("basil8"));
         System.out.println("✅ Имя пользователя корректное: basil8");
 
@@ -116,7 +129,7 @@ public class DemoQaCheckTest extends TestBase {  // ← НАСЛЕДУЕМ ОТ 
                 .contentType(JSON)
                 .header("Authorization", "Bearer " + token)
                 .body("{\"isbn\": \"" + isbn + "\", \"userId\": \"" + userId + "\"}")
-                .delete("/BookStore/v1/Book")  // ← ОТНОСИТЕЛЬНЫЙ URL!
+                .delete("/BookStore/v1/Book")
                 .then()
                 .statusCode(204);
         System.out.println("✅ Книга удалена через API (очистка)");
@@ -124,7 +137,7 @@ public class DemoQaCheckTest extends TestBase {  // ← НАСЛЕДУЕМ ОТ 
         // ШАГ 9: ПРОВЕРКА ЧТО КНИГА УДАЛЕНА
         io.restassured.response.Response userResponseAfterDelete = given()
                 .header("Authorization", "Bearer " + token)
-                .get("/Account/v1/User/" + userId)  // ← ОТНОСИТЕЛЬНЫЙ URL!
+                .get("/Account/v1/User/" + userId)
                 .then()
                 .statusCode(200)
                 .extract()
@@ -137,18 +150,14 @@ public class DemoQaCheckTest extends TestBase {  // ← НАСЛЕДУЕМ ОТ 
             System.out.println("❌ ОШИБКА: Книга не удалена из коллекции");
         }
 
-        // ШАГ 10: UI РАЗЛОГИНИВАНИЕ И ЗАКРЫТИЕ БРАУЗЕРА
-        open("/profile");  // ← ОТНОСИТЕЛЬНЫЙ URL!
-
-        // Нажимаем кнопку Log out через UI
+        // ШАГ 10: UI РАЗЛОГИНИВАНИЕ
+        open("/profile");
         $("#submit").click();
         System.out.println("✅ UI разлогинивание выполнено");
 
-        // Проверяем что мы на странице логина (после выхода)
         $("#userForm").shouldBe(visible);
         System.out.println("✅ Успешно перешли на страницу логина");
 
-        // Браузер закроется автоматически в @AfterEach методе TestBase!
         System.out.println("🎉 ПОЛНЫЙ ЦИКЛ ТЕСТА УСПЕШНО ЗАВЕРШЕН!");
     }
 }
