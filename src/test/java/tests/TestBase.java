@@ -15,7 +15,6 @@ import org.openqa.selenium.remote.DesiredCapabilities;
 import java.util.Map;
 
 import static com.codeborne.selenide.Selenide.closeWebDriver;
-import static io.restassured.RestAssured.given;
 
 public class TestBase {
 
@@ -23,7 +22,6 @@ public class TestBase {
     static void setup() {
         BrowserDriverConfig config = ConfigFactory.create(BrowserDriverConfig.class, System.getProperties());
 
-        // Selenide configuration
         Configuration.baseUrl = "https://demoqa.com";
         Configuration.pageLoadStrategy = "eager";
         Configuration.browser = config.getBrowserName();
@@ -31,11 +29,9 @@ public class TestBase {
         Configuration.browserSize = "1920x1080";
         Configuration.timeout = 10000;
 
-        // RestAssured configuration
         RestAssured.baseURI = "https://demoqa.com";
         RestAssured.filters(CustomAllureListener.withCustomTemplates());
 
-        // Remote WebDriver configuration
         if (!config.getRemoteWebDriver().isEmpty()) {
             Configuration.remote = config.getRemoteWebDriver();
         }
@@ -47,7 +43,6 @@ public class TestBase {
         ));
         Configuration.browserCapabilities = capabilities;
 
-        // Allure listeners
         SelenideLogger.addListener("AllureSelenide", new AllureSelenide());
     }
 

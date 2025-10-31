@@ -3,7 +3,7 @@ package config;
 import org.aeonbits.owner.Config;
 
 @Config.Sources({
-        "classpath:user.properties",
+        "classpath:config/user.properties",
 })
 public interface UserConfig extends Config {
     @Key("userName")
