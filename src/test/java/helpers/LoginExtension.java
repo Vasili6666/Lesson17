@@ -24,14 +24,18 @@ public class LoginExtension implements BeforeEachCallback {
             String username = withLogin.username().isEmpty() ? USER_NAME : withLogin.username();
             String password = withLogin.password().isEmpty() ? PASSWORD : withLogin.password();
 
-            step("Авторизация через API с аннотацией @WithLogin", () -> {
+            step("ШАГ 1: API Логин - получение токена авторизации", () -> {
                 authResponse = AuthorizationApi.authResponse(username, password);
+                System.out.println("✅ Токен получен: " + authResponse.getToken());
+                System.out.println("✅ UserId получен: " + authResponse.getUserId());
+            });
 
-                // Устанавливаем куки в браузер
+            step("ШАГ 2: Установка авторизационных кук в браузер", () -> {
                 open("/favicon.ico");
                 getWebDriver().manage().addCookie(new Cookie("userID", authResponse.getUserId()));
                 getWebDriver().manage().addCookie(new Cookie("token", authResponse.getToken()));
                 getWebDriver().manage().addCookie(new Cookie("expires", authResponse.getExpires()));
+                System.out.println("✅ Авторизационные куки установлены в браузер");
             });
         }
     }
