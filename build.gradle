@@ -39,6 +39,7 @@ repositories {
 dependencies {
     testImplementation(
             "org.junit.jupiter:junit-jupiter:$junitVersion",
+            "org.aeonbits.owner:owner:$ownerVersion",
             "com.codeborne:selenide:$selenideVersion",
             "com.github.javafaker:javafaker:$javafakerVersion",
             "com.jcraft:jsch:$jschVersion",

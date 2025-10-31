@@ -10,31 +10,33 @@ import static com.codeborne.selenide.Condition.text;
 import static com.codeborne.selenide.Condition.visible;
 import static com.codeborne.selenide.Selenide.*;
 import static com.codeborne.selenide.WebDriverRunner.getWebDriver;
+import static data.UserData.PASSWORD;
+import static data.UserData.USER_NAME;
 import static io.restassured.RestAssured.given;
-import static io.restassured.http.ContentType.JSON;
+import static specs.Specification.*; // ← ИМПОРТИРУЕМ НАШИ СПЕЦИФИКАЦИИ!
 
 public class DemoQaCheckTest extends TestBase {
 
     @Test
     void checkDemoQaWorkflow() {
-        String username = "basil8";
-        String password = "Basil1982!";
+        String username = USER_NAME;
+        String password = PASSWORD;
         String isbn = "9781449325862";
         String bookTitle = "Git Pocket Guide";
 
         System.out.println("🚀 ЗАПУСК ПОЛНОГО WORKFLOW DEMOQA");
 
-        // ШАГ 1: API ЛОГИН (С МОДЕЛЯМИ!)
+        // ШАГ 1: API ЛОГИН (СО СПЕЦИФИКАЦИЯМИ!)
         LoginBody loginBody = new LoginBody();
         loginBody.setUserName(username);
         loginBody.setPassword(password);
 
         LoginResponse loginResponse = given()
-                .contentType(JSON)
-                .body(loginBody)  // ← Теперь работает!
+                .spec(allRequests) // ← ИСПОЛЬЗУЕМ SPEC ДЛЯ ЗАПРОСА
+                .body(loginBody)
                 .post("/Account/v1/Login")
                 .then()
-                .statusCode(200)
+                .spec(successfulLoginResponse200) // ← ИСПОЛЬЗУЕМ SPEC ДЛЯ ОТВЕТА
                 .extract()
                 .as(LoginResponse.class);
 
@@ -52,22 +54,23 @@ public class DemoQaCheckTest extends TestBase {
         getWebDriver().manage().addCookie(new Cookie("token", token));
         System.out.println("✅ Куки установлены в браузер!");
 
-        // ШАГ 3: УДАЛЕНИЕ ВСЕХ КНИГ
+        // ШАГ 3: УДАЛЕНИЕ ВСЕХ КНИГ (СО СПЕЦИФИКАЦИЕЙ!)
         given()
-                .contentType(JSON)
+                .spec(allRequests)
                 .header("Authorization", "Bearer " + token)
                 .queryParam("UserId", userId)
                 .delete("/BookStore/v1/Books")
                 .then()
-                .statusCode(204);
+                .spec(successDeleteAllBooksResponse204);
         System.out.println("✅ Все книги удалены из профиля!");
 
-        // ШАГ 4: ПРОВЕРКА ЧТО КНИГ УДАЛЕНЫ
+        // ШАГ 4: ПРОВЕРКА ЧТО КНИГ УДАЛЕНЫ (СО СПЕЦИФИКАЦИЕЙ!)
         io.restassured.response.Response userResponse = given()
+                .spec(allRequests)
                 .header("Authorization", "Bearer " + token)
                 .get("/Account/v1/User/" + userId)
                 .then()
-                .statusCode(200)
+                .spec(successfulUserResponse200)
                 .extract()
                 .response();
 
@@ -78,28 +81,29 @@ public class DemoQaCheckTest extends TestBase {
             System.out.println("❌ ОШИБКА: В коллекции осталось " + booksCount + " книг");
         }
 
-        // ШАГ 5: ДОБАВЛЕНИЕ КНИГИ (С МОДЕЛЯМИ!)
+        // ШАГ 5: ДОБАВЛЕНИЕ КНИГИ (СО СПЕЦИФИКАЦИЕЙ!)
         AddBookBody addBookRequest = new AddBookBody();
         addBookRequest.setUserId(userId);
         addBookRequest.setCollectionOfIsbns(
-                Collections.singletonList(new IsbnBook(isbn))  // ← МОДЕЛЬ вместо JSON!
+                Collections.singletonList(new IsbnBook(isbn))
         );
 
         given()
-                .contentType(JSON)
+                .spec(allRequests)
                 .header("Authorization", "Bearer " + token)
-                .body(addBookRequest)  // ← Передаем модель!
+                .body(addBookRequest)
                 .post("/BookStore/v1/Books")
                 .then()
-                .statusCode(201);
+                .spec(successAddBooksResponse201);
         System.out.println("✅ Книга добавлена: " + isbn);
 
-        // ШАГ 6: ПРОВЕРКА ЧТО КНИГА ДОБАВЛЕНА
+        // ШАГ 6: ПРОВЕРКА ЧТО КНИГА ДОБАВЛЕНА (СО СПЕЦИФИКАЦИЕЙ!)
         io.restassured.response.Response userResponseAfterAdd = given()
+                .spec(allRequests)
                 .header("Authorization", "Bearer " + token)
                 .get("/Account/v1/User/" + userId)
                 .then()
-                .statusCode(200)
+                .spec(successfulUserResponse200)
                 .extract()
                 .response();
 
@@ -114,8 +118,8 @@ public class DemoQaCheckTest extends TestBase {
 
         // ШАГ 7: UI ПРОВЕРКИ
         open("/profile");
-        $("#userName-value").shouldHave(text("basil8"));
-        System.out.println("✅ Имя пользователя корректное: basil8");
+        $("#userName-value").shouldHave(text(username)); // ← используем переменную
+        System.out.println("✅ Имя пользователя корректное: " + username);
 
         $("body").shouldHave(text(bookTitle));
         System.out.println("✅ Книга '" + bookTitle + "' отображается");
@@ -126,20 +130,21 @@ public class DemoQaCheckTest extends TestBase {
 
         // ШАГ 8: УДАЛЕНИЕ КНИГИ (ОЧИСТКА)
         given()
-                .contentType(JSON)
+                .spec(allRequests)
                 .header("Authorization", "Bearer " + token)
                 .body("{\"isbn\": \"" + isbn + "\", \"userId\": \"" + userId + "\"}")
                 .delete("/BookStore/v1/Book")
                 .then()
-                .statusCode(204);
+                .spec(successDeleteAllBooksResponse204);
         System.out.println("✅ Книга удалена через API (очистка)");
 
         // ШАГ 9: ПРОВЕРКА ЧТО КНИГА УДАЛЕНА
         io.restassured.response.Response userResponseAfterDelete = given()
+                .spec(allRequests)
                 .header("Authorization", "Bearer " + token)
                 .get("/Account/v1/User/" + userId)
                 .then()
-                .statusCode(200)
+                .spec(successfulUserResponse200)
                 .extract()
                 .response();
 
