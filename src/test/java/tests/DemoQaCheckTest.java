@@ -10,7 +10,8 @@ import static com.codeborne.selenide.WebDriverRunner.getWebDriver;
 import static io.restassured.RestAssured.given;
 import static io.restassured.http.ContentType.JSON;
 
-public class DemoQaCheckTest {
+public class DemoQaCheckTest extends TestBase {  // ← НАСЛЕДУЕМ ОТ TestBase!
+
     @Test
     void checkDemoQaWorkflow() {
         String username = "basil8";
@@ -24,7 +25,7 @@ public class DemoQaCheckTest {
         io.restassured.response.Response loginResponse = given()
                 .contentType(JSON)
                 .body("{\"userName\": \"" + username + "\", \"password\": \"" + password + "\"}")
-                .post("https://demoqa.com/Account/v1/Login")
+                .post("/Account/v1/Login")  // ← ОТНОСИТЕЛЬНЫЙ URL!
                 .then()
                 .statusCode(200)
                 .extract()
@@ -38,7 +39,7 @@ public class DemoQaCheckTest {
         System.out.println("✅ UserId получен: " + userId);
 
         // ШАГ 2: UI АВТОРИЗАЦИЯ
-        open("https://demoqa.com/favicon.ico");
+        open("/favicon.ico");  // ← ОТНОСИТЕЛЬНЫЙ URL!
         getWebDriver().manage().addCookie(new Cookie("userID", userId));
         getWebDriver().manage().addCookie(new Cookie("expires", expires));
         getWebDriver().manage().addCookie(new Cookie("token", token));
@@ -49,7 +50,7 @@ public class DemoQaCheckTest {
                 .contentType(JSON)
                 .header("Authorization", "Bearer " + token)
                 .queryParam("UserId", userId)
-                .delete("https://demoqa.com/BookStore/v1/Books")
+                .delete("/BookStore/v1/Books")  // ← ОТНОСИТЕЛЬНЫЙ URL!
                 .then()
                 .statusCode(204);
         System.out.println("✅ Все книги удалены из профиля!");
@@ -57,7 +58,7 @@ public class DemoQaCheckTest {
         // ШАГ 4: ПРОВЕРКА ЧТО КНИГ УДАЛЕНЫ
         io.restassured.response.Response userResponse = given()
                 .header("Authorization", "Bearer " + token)
-                .get("https://demoqa.com/Account/v1/User/" + userId)
+                .get("/Account/v1/User/" + userId)  // ← ОТНОСИТЕЛЬНЫЙ URL!
                 .then()
                 .statusCode(200)
                 .extract()
@@ -75,7 +76,7 @@ public class DemoQaCheckTest {
                 .contentType(JSON)
                 .header("Authorization", "Bearer " + token)
                 .body("{\"userId\": \"" + userId + "\", \"collectionOfIsbns\": [{\"isbn\": \"" + isbn + "\"}]}")
-                .post("https://demoqa.com/BookStore/v1/Books")
+                .post("/BookStore/v1/Books")  // ← ОТНОСИТЕЛЬНЫЙ URL!
                 .then()
                 .statusCode(201);
         System.out.println("✅ Книга добавлена: " + isbn);
@@ -83,7 +84,7 @@ public class DemoQaCheckTest {
         // ШАГ 6: ПРОВЕРКА ЧТО КНИГА ДОБАВЛЕНА
         io.restassured.response.Response userResponseAfterAdd = given()
                 .header("Authorization", "Bearer " + token)
-                .get("https://demoqa.com/Account/v1/User/" + userId)
+                .get("/Account/v1/User/" + userId)  // ← ОТНОСИТЕЛЬНЫЙ URL!
                 .then()
                 .statusCode(200)
                 .extract()
@@ -99,7 +100,7 @@ public class DemoQaCheckTest {
         }
 
         // ШАГ 7: UI ПРОВЕРКИ
-        open("https://demoqa.com/profile");
+        open("/profile");  // ← ОТНОСИТЕЛЬНЫЙ URL!
         $("#userName-value").shouldHave(text("basil8"));
         System.out.println("✅ Имя пользователя корректное: basil8");
 
@@ -115,7 +116,7 @@ public class DemoQaCheckTest {
                 .contentType(JSON)
                 .header("Authorization", "Bearer " + token)
                 .body("{\"isbn\": \"" + isbn + "\", \"userId\": \"" + userId + "\"}")
-                .delete("https://demoqa.com/BookStore/v1/Book")
+                .delete("/BookStore/v1/Book")  // ← ОТНОСИТЕЛЬНЫЙ URL!
                 .then()
                 .statusCode(204);
         System.out.println("✅ Книга удалена через API (очистка)");
@@ -123,7 +124,7 @@ public class DemoQaCheckTest {
         // ШАГ 9: ПРОВЕРКА ЧТО КНИГА УДАЛЕНА
         io.restassured.response.Response userResponseAfterDelete = given()
                 .header("Authorization", "Bearer " + token)
-                .get("https://demoqa.com/Account/v1/User/" + userId)
+                .get("/Account/v1/User/" + userId)  // ← ОТНОСИТЕЛЬНЫЙ URL!
                 .then()
                 .statusCode(200)
                 .extract()
@@ -137,7 +138,7 @@ public class DemoQaCheckTest {
         }
 
         // ШАГ 10: UI РАЗЛОГИНИВАНИЕ И ЗАКРЫТИЕ БРАУЗЕРА
-        open("https://demoqa.com/profile");
+        open("/profile");  // ← ОТНОСИТЕЛЬНЫЙ URL!
 
         // Нажимаем кнопку Log out через UI
         $("#submit").click();
@@ -147,10 +148,7 @@ public class DemoQaCheckTest {
         $("#userForm").shouldBe(visible);
         System.out.println("✅ Успешно перешли на страницу логина");
 
-        // Закрываем браузер
-        closeWebDriver();
-        System.out.println("✅ Браузер закрыт");
-
+        // Браузер закроется автоматически в @AfterEach методе TestBase!
         System.out.println("🎉 ПОЛНЫЙ ЦИКЛ ТЕСТА УСПЕШНО ЗАВЕРШЕН!");
     }
 }
