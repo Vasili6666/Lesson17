@@ -1,13 +1,15 @@
 package pages;
 
 import api.BookApiSteps;
+import data.UserData;
+
 import static com.codeborne.selenide.Condition.*;
 import static com.codeborne.selenide.Selenide.*;
 import static io.qameta.allure.Allure.step;
 
 public class ProfilePage {
 
-    private final String USER_NAME = "basil8";
+    private final String USER_NAME = UserData.USER_NAME;
     private final BookApiSteps bookSteps = new BookApiSteps();
 
     public void openProfilePage() {
