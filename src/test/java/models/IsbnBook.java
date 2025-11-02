@@ -1,4 +1,4 @@
-// Берем готовые от коллеги:
+
 package models;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;

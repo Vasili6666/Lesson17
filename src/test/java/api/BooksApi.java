@@ -3,9 +3,7 @@ package api;
 import io.restassured.response.Response;
 import models.AddBookBody;
 import models.IsbnBook;
-
 import java.util.Collections;
-
 import static io.restassured.RestAssured.given;
 import static specs.Specification.*;
 
@@ -21,9 +19,6 @@ public class BooksApi {
                 .spec(successDeleteAllBooksResponse204);
     }
 
-   /* public static void addBooks(String token, String userId) {
-        addBook(token, userId, "9781449325862"); // Git Pocket Guide по умолчанию
-    }*/
 
     public static void addBook(String token, String userId, String isbn) {
         AddBookBody addBookRequest = new AddBookBody();
@@ -41,15 +36,6 @@ public class BooksApi {
                 .spec(successAddBooksResponse201);
     }
 
-    /*public static void deleteBook(String token, String userId, String isbn) {
-        given()
-                .spec(allRequests)
-                .header("Authorization", "Bearer " + token)
-                .body("{\"isbn\": \"" + isbn + "\", \"userId\": \"" + userId + "\"}")
-                .delete("/BookStore/v1/Book")
-                .then()
-                .spec(successDeleteAllBooksResponse204);
-    }*/
 
     public static Response getUserInfo(String token, String userId) {
         return given()
