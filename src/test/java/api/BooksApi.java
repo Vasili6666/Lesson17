@@ -21,9 +21,9 @@ public class BooksApi {
                 .spec(successDeleteAllBooksResponse204);
     }
 
-    public static void addBooks(String token, String userId) {
+   /* public static void addBooks(String token, String userId) {
         addBook(token, userId, "9781449325862"); // Git Pocket Guide по умолчанию
-    }
+    }*/
 
     public static void addBook(String token, String userId, String isbn) {
         AddBookBody addBookRequest = new AddBookBody();
@@ -41,7 +41,7 @@ public class BooksApi {
                 .spec(successAddBooksResponse201);
     }
 
-    public static void deleteBook(String token, String userId, String isbn) {
+    /*public static void deleteBook(String token, String userId, String isbn) {
         given()
                 .spec(allRequests)
                 .header("Authorization", "Bearer " + token)
@@ -49,7 +49,7 @@ public class BooksApi {
                 .delete("/BookStore/v1/Book")
                 .then()
                 .spec(successDeleteAllBooksResponse204);
-    }
+    }*/
 
     public static Response getUserInfo(String token, String userId) {
         return given()

@@ -1,3 +1,4 @@
+/*
 package config;
 
 import org.aeonbits.owner.Config;
@@ -13,4 +14,4 @@ public interface BrowserDriverConfig extends Config {
 
     @Key("remote.web.driver")
     String getRemoteWebDriver();
-}
+}*/

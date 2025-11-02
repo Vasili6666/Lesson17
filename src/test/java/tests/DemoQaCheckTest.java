@@ -1,5 +1,44 @@
 package tests;
 
+import api.BookApiSteps;
+import data.BookData;
+import helpers.WithLogin;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
+import pages.ProfilePage;
+
+public class DemoQaCheckTest extends TestBase {
+
+    @Test
+    @WithLogin
+    @DisplayName("Проверка удаления книг из профиля")
+    @Tag("API+UI")
+    void addedDeletedItemTest() {
+        BookApiSteps bookSteps = new BookApiSteps();
+        ProfilePage profilePage = new ProfilePage();
+        BookData bookData = new BookData();
+
+        // API шаги
+        bookSteps.deleteAllBooks();
+        bookSteps.addBook(bookData.getIsbn());
+        bookSteps.verifyBookAdded(bookData.getIsbn());
+
+        // UI шаги
+        profilePage.openProfilePage();
+        profilePage.verifyUserName();
+        profilePage.verifyBookDisplayed(bookData.getBookTitle());
+        profilePage.deleteBook();
+        profilePage.verifyProfileIsEmpty();
+        profilePage.verifyBooksCollectionEmptyAPI();
+    }
+}
+
+
+
+/*
+package tests;
+
 import api.BooksApi;
 import helpers.WithLogin;
 import models.LoginResponse;
@@ -114,4 +153,4 @@ public class DemoQaCheckTest extends TestBase {
 
         System.out.println("🎉 ВСЕ ШАГИ УСПЕШНО ВЫПОЛНЕНЫ!");
     }
-}
+}*/

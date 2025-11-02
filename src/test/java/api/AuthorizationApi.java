@@ -12,7 +12,7 @@ import static specs.Specification.successfulLoginResponse200;
 
 public class AuthorizationApi {
 
-    public static LoginResponse authResponse() {
+   /* public static LoginResponse authResponse() {
         LoginBody loginBody = new LoginBody();
         loginBody.setUserName(USER_NAME);
         loginBody.setPassword(PASSWORD);
@@ -25,7 +25,7 @@ public class AuthorizationApi {
                 .spec(successfulLoginResponse200)
                 .extract()
                 .as(LoginResponse.class);
-    }
+    }*/
 
     public static LoginResponse authResponse(String username, String password) {
         LoginBody loginBody = new LoginBody();
