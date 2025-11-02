@@ -2,39 +2,48 @@ package tests;
 
 import com.codeborne.selenide.Configuration;
 import com.codeborne.selenide.logevents.SelenideLogger;
+import config.WebDriverConfig;
 import helpers.Attach;
 import helpers.CustomAllureListener;
 import io.qameta.allure.selenide.AllureSelenide;
 import io.restassured.RestAssured;
+import org.aeonbits.owner.ConfigFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.openqa.selenium.remote.DesiredCapabilities;
+
 import java.util.Map;
+
 import static com.codeborne.selenide.Selenide.closeWebDriver;
 
 public class TestBase {
 
+    // --- подключаем конфиг Owner
+    private static final WebDriverConfig config =
+            ConfigFactory.create(WebDriverConfig.class, System.getProperties());
+
     @BeforeAll
     static void setup() {
 
-        Configuration.baseUrl = getProperty("url", "https://demoqa.com");
-        Configuration.browser = getProperty("browser", "chrome");
-        Configuration.browserSize = getProperty("windowSize", "1920x1080");
+        // --- Настройка Selenide из Owner
+        Configuration.browser = config.browser();
+        Configuration.browserVersion = config.browserVersion();
+        Configuration.baseUrl = config.baseUrl();
+        Configuration.browserSize = "1920x1080";
         Configuration.pageLoadStrategy = "eager";
         Configuration.timeout = 10000;
 
-
-        RestAssured.baseURI = getProperty("url", "https://demoqa.com");
-        RestAssured.filters(CustomAllureListener.withCustomTemplates());
-
-
-        String remoteUrl = getProperty("remoteUrl", null);
-        if (remoteUrl != null && !remoteUrl.isEmpty()) {
-            Configuration.remote = remoteUrl;
+        // --- Если включён удалённый запуск, настраиваем Selenoid
+        if (config.isRemote()) {
+            Configuration.remote = config.remoteUrl();
             setupSelenoidCapabilities();
         }
 
+        // --- Настройка REST-Assured
+        RestAssured.baseURI = config.baseUrl();
+        RestAssured.filters(CustomAllureListener.withCustomTemplates());
 
+        // --- Allure Listener
         SelenideLogger.addListener("AllureSelenide", new AllureSelenide());
 
         logConfiguration();
@@ -42,21 +51,17 @@ public class TestBase {
 
     private static void setupSelenoidCapabilities() {
         DesiredCapabilities capabilities = new DesiredCapabilities();
-        capabilities.setCapability("selenoid:options", Map.<String, Object>of(
+        capabilities.setCapability("selenoid:options", Map.of(
                 "enableVNC", true,
                 "enableVideo", true
         ));
         Configuration.browserCapabilities = capabilities;
     }
 
-    private static String getProperty(String name, String defaultValue) {
-        return System.getProperty(name, defaultValue);
-    }
-
     private static void logConfiguration() {
         System.out.println("=== КОНФИГУРАЦИЯ ТЕСТОВ ===");
         System.out.println("Browser: " + Configuration.browser);
-        System.out.println("Browser Size: " + Configuration.browserSize);
+        System.out.println("Browser Version: " + Configuration.browserVersion);
         System.out.println("Base URL: " + Configuration.baseUrl);
         System.out.println("Remote: " + Configuration.remote);
         System.out.println("===========================");
@@ -68,7 +73,7 @@ public class TestBase {
         Attach.pageSource();
         Attach.browserConsoleLogs();
 
-        if (Configuration.remote != null) {
+        if (Configuration.remote != null && !Configuration.remote.isEmpty()) {
             Attach.addVideo();
         }
 
