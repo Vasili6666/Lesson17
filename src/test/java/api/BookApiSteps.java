@@ -23,7 +23,6 @@ public class BookApiSteps {
         });
     }
 
-
     public void verifyBookAdded(String expectedIsbn) {
         step("API: Проверить что книга добавлена", () -> {
             var userResponse = booksApi.getUserInfo(authResponse.getToken(), authResponse.getUserId());

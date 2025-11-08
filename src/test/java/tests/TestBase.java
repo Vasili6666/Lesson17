@@ -10,6 +10,7 @@ import io.restassured.RestAssured;
 import org.aeonbits.owner.ConfigFactory;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.openqa.selenium.remote.DesiredCapabilities;
 
 import java.util.Map;
@@ -33,8 +34,8 @@ public class TestBase {
         Configuration.pageLoadStrategy = "eager";
         Configuration.timeout = 10000;
 
-        // --- Если включён удалённый запуск, настраиваем Selenoid
-        if (config.isRemote()) {
+        // --- Если remoteUrl задан, настраиваем удалённый запуск
+        if (config.remoteUrl() != null && !config.remoteUrl().isEmpty()) {
             Configuration.remote = config.remoteUrl();
             setupSelenoidCapabilities();
         }
@@ -42,9 +43,6 @@ public class TestBase {
         // --- Настройка REST-Assured
         RestAssured.baseURI = config.baseUrl();
         RestAssured.filters(CustomAllureListener.withCustomTemplates());
-
-        // --- Allure Listener
-        SelenideLogger.addListener("AllureSelenide", new AllureSelenide());
 
         logConfiguration();
     }
@@ -65,6 +63,12 @@ public class TestBase {
         System.out.println("Base URL: " + Configuration.baseUrl);
         System.out.println("Remote: " + Configuration.remote);
         System.out.println("===========================");
+    }
+
+    // --- Allure Listener переносим в @BeforeEach
+    @BeforeEach
+    void addAllureListener() {
+        SelenideLogger.addListener("AllureSelenide", new AllureSelenide());
     }
 
     @AfterEach
