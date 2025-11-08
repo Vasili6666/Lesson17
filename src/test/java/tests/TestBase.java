@@ -19,14 +19,14 @@ import static com.codeborne.selenide.Selenide.closeWebDriver;
 
 public class TestBase {
 
-    // --- подключаем конфиг Owner
+
     private static final WebDriverConfig config =
             ConfigFactory.create(WebDriverConfig.class, System.getProperties());
 
     @BeforeAll
     static void setup() {
 
-        // --- Настройка Selenide из Owner
+
         Configuration.browser = config.browser();
         Configuration.browserVersion = config.browserVersion();
         Configuration.baseUrl = config.baseUrl();
@@ -34,13 +34,13 @@ public class TestBase {
         Configuration.pageLoadStrategy = "eager";
         Configuration.timeout = 10000;
 
-        // --- Если remoteUrl задан, настраиваем удалённый запуск
+
         if (config.remoteUrl() != null && !config.remoteUrl().isEmpty()) {
             Configuration.remote = config.remoteUrl();
             setupSelenoidCapabilities();
         }
 
-        // --- Настройка REST-Assured
+
         RestAssured.baseURI = config.baseUrl();
         RestAssured.filters(CustomAllureListener.withCustomTemplates());
 
@@ -65,7 +65,7 @@ public class TestBase {
         System.out.println("===========================");
     }
 
-    // --- Allure Listener переносим в @BeforeEach
+
     @BeforeEach
     void addAllureListener() {
         SelenideLogger.addListener("AllureSelenide", new AllureSelenide());
