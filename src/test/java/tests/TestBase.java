@@ -35,10 +35,15 @@ public class TestBase {
         Configuration.timeout = 10000;
 
 
-        if (config.remoteUrl() != null && !config.remoteUrl().isEmpty()) {
+        Configuration.remote = config.remoteUrl();
+        setupSelenoidCapabilities();
+
+
+
+       /* if (config.remoteUrl() != null && !config.remoteUrl().isEmpty()) {
             Configuration.remote = config.remoteUrl();
             setupSelenoidCapabilities();
-        }
+        }*/
 
 
         RestAssured.baseURI = config.baseUrl();
